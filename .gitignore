@@ -1,6 +1,0 @@
-build/
-.qtcreator/
-*.pro.user
-*.o
-*.app/
-.qmake.stash

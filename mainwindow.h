@@ -33,7 +33,6 @@ private:
     bool handleCell(QChar cell);
     void checkMonsterAttack();
     void restartGame();
-    void showRules();
 
     static const int Rows = 12, Cols = 12, NeedCoins = 4;
 
@@ -42,7 +41,6 @@ private:
     QVector<QVector<QLabel*>> cells;
 
     QPushButton *newGameButton = nullptr;
-    QPushButton *rulesButton = nullptr, *exitButton = nullptr;
 
     int dungeonNumber = 1, wallCount = 20;
     int playerRow = 1, playerCol = 1;

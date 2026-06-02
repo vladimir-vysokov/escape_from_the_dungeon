@@ -1,6 +1,5 @@
 #include "mainwindow.h"
 
-#include <QApplication>
 #include <QFrame>
 #include <QGridLayout>
 #include <QHBoxLayout>
@@ -85,13 +84,10 @@ void MainWindow::setupUi()
     bottomLayout->setSpacing(12);
 
     newGameButton = new QPushButton("Новая игра", bottomPanel);
-    rulesButton = new QPushButton("Правила", bottomPanel);
-    exitButton = new QPushButton("Выход", bottomPanel);
+    newGameButton->setMinimumWidth(160);
 
     bottomLayout->addStretch();
     bottomLayout->addWidget(newGameButton);
-    bottomLayout->addWidget(rulesButton);
-    bottomLayout->addWidget(exitButton);
     bottomLayout->addStretch();
     mainLayout->addWidget(bottomPanel);
 
@@ -99,13 +95,6 @@ void MainWindow::setupUi()
         dungeonNumber = 1;
         generateMap();
         setFocus();
-    });
-    connect(rulesButton, &QPushButton::clicked, this, [this]() {
-        showRules();
-        setFocus();
-    });
-    connect(exitButton, &QPushButton::clicked, this, []() {
-        QApplication::quit();
     });
 }
 
@@ -402,18 +391,4 @@ void MainWindow::checkMonsterAttack()
 void MainWindow::restartGame()
 {
     generateMap();
-}
-
-void MainWindow::showRules()
-{
-    QMessageBox::information(
-        this,
-        "Правила",
-        "Найдите ключ 🔑 и соберите минимум 4 монеты 🟡.\n"
-        "После этого дойдите до выхода 🚪.\n\n"
-        "W/A/S/D или стрелки - движение.\n"
-        "Ловушка ⚠️: -20 HP и исчезает.\n"
-        "Аптечка ❤️: +20 HP, максимум 100.\n"
-        "Монстр 👾: -30 HP, если наступить на него.\n"
-        "Если после хода стоять рядом с монстром: -10 HP.");
 }
