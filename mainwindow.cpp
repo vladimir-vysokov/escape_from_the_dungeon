@@ -45,6 +45,24 @@ QPixmap loadSvgIcon(const QString &name, const QSize &size)
     renderer.render(&painter);
     return pixmap;
 }
+
+QPixmap makeKeyIcon(const QSize &size)
+{
+    QPixmap pixmap(size);
+    pixmap.fill(Qt::transparent);
+
+    QPainter painter(&pixmap);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    painter.setPen(QPen(QColor("#fbbf24"), 3, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    painter.setBrush(Qt::NoBrush);
+
+    const int centerY = size.height() / 2;
+    painter.drawEllipse(QRectF(4, centerY - 7, 14, 14));
+    painter.drawLine(QPointF(18, centerY), QPointF(size.width() - 5, centerY));
+    painter.drawLine(QPointF(size.width() - 12, centerY), QPointF(size.width() - 12, centerY + 4));
+    painter.drawLine(QPointF(size.width() - 8, centerY), QPointF(size.width() - 8, centerY + 4));
+    return pixmap;
+}
 } // namespace
 
 MainWindow::MainWindow(QWidget *parent)
@@ -273,47 +291,39 @@ void MainWindow::drawMap()
     for (int row = 0; row < Rows; ++row) {
         for (int col = 0; col < Cols; ++col) {
             QChar cell = map[row][col];
-            QString text;
             QString color;
+            QPixmap icon;
 
             if (cell == QChar('#')) {
                 color = "#020617";
             } else if (cell == QChar('P')) {
                 color = "#38bdf8";
+                icon = loadSvgIcon("player.svg", QSize(30, 30));
             } else if (cell == QChar('C')) {
                 color = "#f59e0b";
+                icon = loadSvgIcon("coin.svg", QSize(30, 30));
             } else if (cell == QChar('K')) {
-                text = "🔑";
                 color = "#7c5e10";
+                icon = makeKeyIcon(QSize(30, 30));
             } else if (cell == QChar('E')) {
-                text = "🚪";
                 color = "#166534";
+                icon = loadSvgIcon("door.svg", QSize(30, 30));
             } else if (cell == QChar('T')) {
-                text = "⚠️";
                 color = "#7f1d1d";
+                icon = loadSvgIcon("alert.svg", QSize(30, 30));
             } else if (cell == QChar('H')) {
-                text = "❤️";
                 color = "#9f1239";
             } else if (cell == QChar('M')) {
-                text = "👾";
                 color = "#581c87";
+                icon = loadSvgIcon("monster.svg", QSize(30, 30));
             } else {
                 color = "#334155";
             }
 
-            cells[row][col]->setText(text);
-            cells[row][col]->setPixmap(QPixmap());
+            cells[row][col]->setText(QString());
+            cells[row][col]->setPixmap(icon);
             QString style = "QLabel { background-color: " + color + "; border: 1px solid #475569;"
-                            " border-radius: 6px; font-size: 23px; }";
-            if (cell == QChar('C')) {
-                style = "QLabel { background-color: " + color + "; border: 1px solid #fbbf24;"
-                        " border-radius: 22px; padding: 0px; }";
-                cells[row][col]->setPixmap(loadSvgIcon("coin.svg", QSize(28, 28)));
-            } else if (cell == QChar('P')) {
-                style = "QLabel { background-color: " + color + "; border: 2px solid #f8fafc;"
-                        " border-radius: 22px; padding: 0px; }";
-                cells[row][col]->setPixmap(loadSvgIcon("player.svg", QSize(28, 28)));
-            }
+                            " border-radius: 6px; }";
             cells[row][col]->setStyleSheet(style);
         }
     }
