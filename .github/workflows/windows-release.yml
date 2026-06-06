@@ -1,0 +1,41 @@
+name: Windows exe
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.3'
+          host: windows
+          target: desktop
+          arch: win64_mingw
+          tools: tools_mingw1310,qt.tools.win64_mingw1310
+
+      - name: Build release
+        shell: pwsh
+        run: |
+          qmake escape_from_the_dungeon.pro CONFIG+=release
+          mingw32-make -j2
+
+      - name: Deploy Qt libraries
+        shell: pwsh
+        run: |
+          windeployqt release\escape_from_the_dungeon.exe --release
+
+      - name: Upload Windows exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: escape_from_the_dungeon-windows
+          path: release/**
