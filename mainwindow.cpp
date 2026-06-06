@@ -8,6 +8,7 @@
 #include <QPainter>
 #include <QRandomGenerator>
 #include <QCoreApplication>
+#include <QFile>
 #include <QFileInfo>
 #include <QPixmap>
 #include <QSvgRenderer>
@@ -17,6 +18,11 @@
 namespace {
 QString resolveAssetPath(const QString &name)
 {
+    const QString resourcePath = QString(":/assets/%1").arg(name);
+    if (QFile::exists(resourcePath)) {
+        return resourcePath;
+    }
+
     const QString appPath = QCoreApplication::applicationDirPath() + "/assets/" + name;
     if (QFileInfo::exists(appPath)) {
         return appPath;

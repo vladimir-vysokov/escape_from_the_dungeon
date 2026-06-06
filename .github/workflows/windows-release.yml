@@ -46,7 +46,6 @@ jobs:
           Copy-Item (Join-Path $qtBin "Qt5Svg.dll") $packageDir
 
           Copy-Item (Join-Path $qtPlugins "platforms") $packageDir -Recurse
-          Copy-Item "assets" $packageDir -Recurse
 
           Copy-Item (Join-Path $mingwBin "libgcc_s_seh-1.dll") $packageDir
           Copy-Item (Join-Path $mingwBin "libstdc++-6.dll") $packageDir
