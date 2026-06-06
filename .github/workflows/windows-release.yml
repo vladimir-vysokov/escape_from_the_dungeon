@@ -32,15 +32,28 @@ jobs:
         shell: pwsh
         run: |
           $packageDir = "dist\escape_from_the_dungeon-windows"
+          $qtBin = Join-Path $env:QT_ROOT_DIR "bin"
+          $qtPlugins = Join-Path $env:QT_ROOT_DIR "plugins"
+          $mingwMake = Get-Command mingw32-make.exe
+          $mingwBin = Split-Path $mingwMake.Source
+
           New-Item -ItemType Directory -Force -Path $packageDir | Out-Null
+
           Copy-Item "release\escape_from_the_dungeon.exe" $packageDir
-          & "$env:QT_ROOT_DIR\bin\windeployqt.exe" `
-            "$packageDir\escape_from_the_dungeon.exe" `
-            --release `
-            --dir $packageDir `
-            --plugindir "$env:QT_ROOT_DIR\plugins" `
-            --compiler-runtime `
-            --no-translations
+          Copy-Item (Join-Path $qtBin "Qt5Core.dll") $packageDir
+          Copy-Item (Join-Path $qtBin "Qt5Gui.dll") $packageDir
+          Copy-Item (Join-Path $qtBin "Qt5Widgets.dll") $packageDir
+
+          Copy-Item (Join-Path $qtPlugins "platforms") $packageDir -Recurse
+
+          Copy-Item (Join-Path $mingwBin "libgcc_s_seh-1.dll") $packageDir
+          Copy-Item (Join-Path $mingwBin "libstdc++-6.dll") $packageDir
+          Copy-Item (Join-Path $mingwBin "libwinpthread-1.dll") $packageDir
+
+          if (Test-Path (Join-Path $qtBin "D3Dcompiler_47.dll")) {
+            Copy-Item (Join-Path $qtBin "D3Dcompiler_47.dll") $packageDir
+          }
+
           Compress-Archive -Path "$packageDir\*" -DestinationPath "escape_from_the_dungeon-universal.zip" -Force
 
       - name: Upload Windows package
