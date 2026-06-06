@@ -7,9 +7,45 @@
 #include <QMessageBox>
 #include <QPainter>
 #include <QRandomGenerator>
+#include <QCoreApplication>
+#include <QFileInfo>
 #include <QPixmap>
+#include <QSvgRenderer>
 #include <QVBoxLayout>
 #include <queue>
+
+namespace {
+QString resolveAssetPath(const QString &name)
+{
+    const QString appPath = QCoreApplication::applicationDirPath() + "/assets/" + name;
+    if (QFileInfo::exists(appPath)) {
+        return appPath;
+    }
+
+    const QString relativePath = QString("assets/%1").arg(name);
+    if (QFileInfo::exists(relativePath)) {
+        return relativePath;
+    }
+
+    return name;
+}
+
+QPixmap loadSvgIcon(const QString &name, const QSize &size)
+{
+    QPixmap pixmap(size);
+    pixmap.fill(Qt::transparent);
+
+    QSvgRenderer renderer(resolveAssetPath(name));
+    if (!renderer.isValid()) {
+        return pixmap;
+    }
+
+    QPainter painter(&pixmap);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    renderer.render(&painter);
+    return pixmap;
+}
+} // namespace
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -234,36 +270,6 @@ int MainWindow::countReachableCoins(const QVector<QVector<bool>> &visited)
 
 void MainWindow::drawMap()
 {
-    auto makePlayerIcon = []() {
-        QPixmap pixmap(30, 30);
-        pixmap.fill(Qt::transparent);
-
-        QPainter painter(&pixmap);
-        painter.setRenderHint(QPainter::Antialiasing, true);
-        painter.setPen(QPen(QColor("#f8fafc"), 2));
-        painter.setBrush(QColor("#38bdf8"));
-        painter.drawEllipse(2, 2, 26, 26);
-        painter.setBrush(QColor("#e0f2fe"));
-        painter.setPen(Qt::NoPen);
-        painter.drawEllipse(11, 11, 8, 8);
-        return pixmap;
-    };
-
-    auto makeCoinIcon = []() {
-        QPixmap pixmap(30, 30);
-        pixmap.fill(Qt::transparent);
-
-        QPainter painter(&pixmap);
-        painter.setRenderHint(QPainter::Antialiasing, true);
-        painter.setPen(QPen(QColor("#fbbf24"), 2));
-        painter.setBrush(QColor("#f59e0b"));
-        painter.drawEllipse(2, 2, 26, 26);
-        painter.setPen(Qt::NoPen);
-        painter.setBrush(QColor("#fde68a"));
-        painter.drawEllipse(9, 8, 8, 8);
-        return pixmap;
-    };
-
     for (int row = 0; row < Rows; ++row) {
         for (int col = 0; col < Cols; ++col) {
             QChar cell = map[row][col];
@@ -301,12 +307,12 @@ void MainWindow::drawMap()
                             " border-radius: 6px; font-size: 23px; }";
             if (cell == QChar('C')) {
                 style = "QLabel { background-color: " + color + "; border: 1px solid #fbbf24;"
-                        " border-radius: 22px; }";
-                cells[row][col]->setPixmap(makeCoinIcon());
+                        " border-radius: 22px; padding: 0px; }";
+                cells[row][col]->setPixmap(loadSvgIcon("coin.svg", QSize(28, 28)));
             } else if (cell == QChar('P')) {
                 style = "QLabel { background-color: " + color + "; border: 2px solid #f8fafc;"
-                        " border-radius: 22px; }";
-                cells[row][col]->setPixmap(makePlayerIcon());
+                        " border-radius: 22px; padding: 0px; }";
+                cells[row][col]->setPixmap(loadSvgIcon("player.svg", QSize(28, 28)));
             }
             cells[row][col]->setStyleSheet(style);
         }
