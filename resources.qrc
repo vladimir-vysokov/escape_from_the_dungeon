@@ -1,9 +1,11 @@
 <RCC>
   <qresource prefix="/assets">
-    <file>assets/player.svg</file>
-    <file>assets/coin.svg</file>
-    <file>assets/monster.svg</file>
-    <file>assets/alert.svg</file>
-    <file>assets/door.svg</file>
+    <file alias="player.svg">assets/player.svg</file>
+    <file alias="coin.svg">assets/coin.svg</file>
+    <file alias="key.svg">assets/key.svg</file>
+    <file alias="medicine.svg">assets/medicine.svg</file>
+    <file alias="monster.svg">assets/monster.svg</file>
+    <file alias="alert.svg">assets/alert.svg</file>
+    <file alias="door.svg">assets/door.svg</file>
   </qresource>
 </RCC>

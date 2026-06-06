@@ -10,7 +10,10 @@
 #include <QCoreApplication>
 #include <QFile>
 #include <QFileInfo>
+#include <QImage>
 #include <QPixmap>
+#include <QRectF>
+#include <QSizeF>
 #include <QSvgRenderer>
 #include <QVBoxLayout>
 #include <queue>
@@ -36,7 +39,27 @@ QString resolveAssetPath(const QString &name)
     return name;
 }
 
-QPixmap loadSvgIcon(const QString &name, const QSize &size)
+QRect opaqueBounds(const QImage &image)
+{
+    QRect bounds;
+    for (int y = 0; y < image.height(); ++y) {
+        const QRgb *line = reinterpret_cast<const QRgb *>(image.constScanLine(y));
+        for (int x = 0; x < image.width(); ++x) {
+            if (qAlpha(line[x]) == 0) {
+                continue;
+            }
+
+            if (bounds.isNull()) {
+                bounds = QRect(x, y, 1, 1);
+            } else {
+                bounds = bounds.united(QRect(x, y, 1, 1));
+            }
+        }
+    }
+    return bounds;
+}
+
+QPixmap loadSvgIcon(const QString &name, const QSize &size, bool trimTransparent = false)
 {
     QPixmap pixmap(size);
     pixmap.fill(Qt::transparent);
@@ -46,29 +69,32 @@ QPixmap loadSvgIcon(const QString &name, const QSize &size)
         return pixmap;
     }
 
-    QPainter painter(&pixmap);
+    const int sourceSide = qMax(size.width(), size.height()) * 4;
+    QImage image(sourceSide, sourceSide, QImage::Format_ARGB32_Premultiplied);
+    image.fill(Qt::transparent);
+
+    QPainter painter(&image);
     painter.setRenderHint(QPainter::Antialiasing, true);
     renderer.render(&painter);
+    painter.end();
+
+    QImage source = image;
+    if (trimTransparent) {
+        const QRect bounds = opaqueBounds(image);
+        if (!bounds.isNull()) {
+            source = image.copy(bounds);
+        }
+    }
+
+    QPainter output(&pixmap);
+    output.setRenderHint(QPainter::Antialiasing, true);
+
+    const QPixmap scaled = QPixmap::fromImage(source).scaled(size, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    const QPoint topLeft((size.width() - scaled.width()) / 2, (size.height() - scaled.height()) / 2);
+    output.drawPixmap(topLeft, scaled);
     return pixmap;
 }
 
-QPixmap makeKeyIcon(const QSize &size)
-{
-    QPixmap pixmap(size);
-    pixmap.fill(Qt::transparent);
-
-    QPainter painter(&pixmap);
-    painter.setRenderHint(QPainter::Antialiasing, true);
-    painter.setPen(QPen(QColor("#fbbf24"), 3, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
-    painter.setBrush(Qt::NoBrush);
-
-    const int centerY = size.height() / 2;
-    painter.drawEllipse(QRectF(4, centerY - 7, 14, 14));
-    painter.drawLine(QPointF(18, centerY), QPointF(size.width() - 5, centerY));
-    painter.drawLine(QPointF(size.width() - 12, centerY), QPointF(size.width() - 12, centerY + 4));
-    painter.drawLine(QPointF(size.width() - 8, centerY), QPointF(size.width() - 8, centerY + 4));
-    return pixmap;
-}
 } // namespace
 
 MainWindow::MainWindow(QWidget *parent)
@@ -310,7 +336,7 @@ void MainWindow::drawMap()
                 icon = loadSvgIcon("coin.svg", QSize(30, 30));
             } else if (cell == QChar('K')) {
                 color = "#7c5e10";
-                icon = makeKeyIcon(QSize(30, 30));
+                icon = loadSvgIcon("key.svg", QSize(30, 30), true);
             } else if (cell == QChar('E')) {
                 color = "#166534";
                 icon = loadSvgIcon("door.svg", QSize(30, 30));
@@ -319,6 +345,7 @@ void MainWindow::drawMap()
                 icon = loadSvgIcon("alert.svg", QSize(30, 30));
             } else if (cell == QChar('H')) {
                 color = "#9f1239";
+                icon = loadSvgIcon("medicine.svg", QSize(30, 30));
             } else if (cell == QChar('M')) {
                 color = "#581c87";
                 icon = loadSvgIcon("monster.svg", QSize(30, 30));
