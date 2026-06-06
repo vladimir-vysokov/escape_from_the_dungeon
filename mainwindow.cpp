@@ -5,7 +5,9 @@
 #include <QHBoxLayout>
 #include <QKeyEvent>
 #include <QMessageBox>
+#include <QPainter>
 #include <QRandomGenerator>
+#include <QPixmap>
 #include <QVBoxLayout>
 #include <queue>
 
@@ -232,6 +234,36 @@ int MainWindow::countReachableCoins(const QVector<QVector<bool>> &visited)
 
 void MainWindow::drawMap()
 {
+    auto makePlayerIcon = []() {
+        QPixmap pixmap(30, 30);
+        pixmap.fill(Qt::transparent);
+
+        QPainter painter(&pixmap);
+        painter.setRenderHint(QPainter::Antialiasing, true);
+        painter.setPen(QPen(QColor("#f8fafc"), 2));
+        painter.setBrush(QColor("#38bdf8"));
+        painter.drawEllipse(2, 2, 26, 26);
+        painter.setBrush(QColor("#e0f2fe"));
+        painter.setPen(Qt::NoPen);
+        painter.drawEllipse(11, 11, 8, 8);
+        return pixmap;
+    };
+
+    auto makeCoinIcon = []() {
+        QPixmap pixmap(30, 30);
+        pixmap.fill(Qt::transparent);
+
+        QPainter painter(&pixmap);
+        painter.setRenderHint(QPainter::Antialiasing, true);
+        painter.setPen(QPen(QColor("#fbbf24"), 2));
+        painter.setBrush(QColor("#f59e0b"));
+        painter.drawEllipse(2, 2, 26, 26);
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(QColor("#fde68a"));
+        painter.drawEllipse(9, 8, 8, 8);
+        return pixmap;
+    };
+
     for (int row = 0; row < Rows; ++row) {
         for (int col = 0; col < Cols; ++col) {
             QChar cell = map[row][col];
@@ -241,11 +273,9 @@ void MainWindow::drawMap()
             if (cell == QChar('#')) {
                 color = "#020617";
             } else if (cell == QChar('P')) {
-                text = "🧍";
                 color = "#38bdf8";
             } else if (cell == QChar('C')) {
-                text = "🟡";
-                color = "#475569";
+                color = "#f59e0b";
             } else if (cell == QChar('K')) {
                 text = "🔑";
                 color = "#7c5e10";
@@ -266,9 +296,19 @@ void MainWindow::drawMap()
             }
 
             cells[row][col]->setText(text);
-            cells[row][col]->setStyleSheet(
-                "QLabel { background-color: " + color + "; border: 1px solid #475569;"
-                " border-radius: 6px; font-size: 23px; }");
+            cells[row][col]->setPixmap(QPixmap());
+            QString style = "QLabel { background-color: " + color + "; border: 1px solid #475569;"
+                            " border-radius: 6px; font-size: 23px; }";
+            if (cell == QChar('C')) {
+                style = "QLabel { background-color: " + color + "; border: 1px solid #fbbf24;"
+                        " border-radius: 22px; }";
+                cells[row][col]->setPixmap(makeCoinIcon());
+            } else if (cell == QChar('P')) {
+                style = "QLabel { background-color: " + color + "; border: 2px solid #f8fafc;"
+                        " border-radius: 22px; }";
+                cells[row][col]->setPixmap(makePlayerIcon());
+            }
+            cells[row][col]->setStyleSheet(style);
         }
     }
 }
