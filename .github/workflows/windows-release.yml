@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2022
 
     steps:
       - name: Checkout
@@ -17,11 +17,10 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
         with:
-          version: '6.8.3'
+          version: '5.15.2'
           host: windows
           target: desktop
-          arch: win64_mingw
-          tools: tools_mingw1310,qt.tools.win64_mingw1310
+          arch: win64_mingw81
 
       - name: Build release
         shell: pwsh
@@ -35,11 +34,11 @@ jobs:
           $packageDir = "dist\escape_from_the_dungeon-windows"
           New-Item -ItemType Directory -Force -Path $packageDir | Out-Null
           Copy-Item "release\escape_from_the_dungeon.exe" $packageDir
-          windeployqt "$packageDir\escape_from_the_dungeon.exe" --release --dir $packageDir
-          Compress-Archive -Path "$packageDir\*" -DestinationPath "escape_from_the_dungeon-windows.zip" -Force
+          windeployqt "$packageDir\escape_from_the_dungeon.exe" --release --dir $packageDir --compiler-runtime --no-translations
+          Compress-Archive -Path "$packageDir\*" -DestinationPath "escape_from_the_dungeon-universal.zip" -Force
 
       - name: Upload Windows package
         uses: actions/upload-artifact@v4
         with:
-          name: escape_from_the_dungeon-windows
-          path: escape_from_the_dungeon-windows.zip
+          name: escape_from_the_dungeon-universal
+          path: escape_from_the_dungeon-universal.zip
