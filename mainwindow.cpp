@@ -59,7 +59,34 @@ QRect opaqueBounds(const QImage &image)
     return bounds;
 }
 
-QPixmap loadSvgIcon(const QString &name, const QSize &size, bool trimTransparent = false)
+QPointF opaqueCentroid(const QImage &image)
+{
+    qint64 totalX = 0;
+    qint64 totalY = 0;
+    qint64 count = 0;
+
+    for (int y = 0; y < image.height(); ++y) {
+        const QRgb *line = reinterpret_cast<const QRgb *>(image.constScanLine(y));
+        for (int x = 0; x < image.width(); ++x) {
+            const int alpha = qAlpha(line[x]);
+            if (alpha == 0) {
+                continue;
+            }
+
+            totalX += x * alpha;
+            totalY += y * alpha;
+            count += alpha;
+        }
+    }
+
+    if (count == 0) {
+        return QPointF(image.width() / 2.0, image.height() / 2.0);
+    }
+
+    return QPointF(static_cast<qreal>(totalX) / count, static_cast<qreal>(totalY) / count);
+}
+
+QPixmap loadSvgIcon(const QString &name, const QSize &size, bool trimTransparent = false, bool centerByMass = false)
 {
     QPixmap pixmap(size);
     pixmap.fill(Qt::transparent);
@@ -86,11 +113,19 @@ QPixmap loadSvgIcon(const QString &name, const QSize &size, bool trimTransparent
         }
     }
 
+    QPointF sourceCenter(source.width() / 2.0, source.height() / 2.0);
+    QPointF massCenter = opaqueCentroid(source);
+    QPointF offset(0.0, 0.0);
+    if (centerByMass) {
+        offset = sourceCenter - massCenter;
+    }
+
     QPainter output(&pixmap);
     output.setRenderHint(QPainter::Antialiasing, true);
 
     const QPixmap scaled = QPixmap::fromImage(source).scaled(size, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-    const QPoint topLeft((size.width() - scaled.width()) / 2, (size.height() - scaled.height()) / 2);
+    const QPointF topLeft((size.width() - scaled.width()) / 2.0 + offset.x() * scaled.width() / source.width(),
+                          (size.height() - scaled.height()) / 2.0 + offset.y() * scaled.height() / source.height());
     output.drawPixmap(topLeft, scaled);
     return pixmap;
 }
@@ -336,7 +371,7 @@ void MainWindow::drawMap()
                 icon = loadSvgIcon("coin.svg", QSize(30, 30));
             } else if (cell == QChar('K')) {
                 color = "#7c5e10";
-                icon = loadSvgIcon("key.svg", QSize(30, 30), true);
+                icon = loadSvgIcon("key.svg", QSize(30, 30), true, true);
             } else if (cell == QChar('E')) {
                 color = "#166534";
                 icon = loadSvgIcon("door.svg", QSize(30, 30));
