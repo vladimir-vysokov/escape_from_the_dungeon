@@ -29,13 +29,17 @@ jobs:
           qmake escape_from_the_dungeon.pro CONFIG+=release
           mingw32-make -j2
 
-      - name: Deploy Qt libraries
+      - name: Package release
         shell: pwsh
         run: |
-          windeployqt release\escape_from_the_dungeon.exe --release
+          $packageDir = "dist\escape_from_the_dungeon-windows"
+          New-Item -ItemType Directory -Force -Path $packageDir | Out-Null
+          Copy-Item "release\escape_from_the_dungeon.exe" $packageDir
+          windeployqt "$packageDir\escape_from_the_dungeon.exe" --release --dir $packageDir
+          Compress-Archive -Path "$packageDir\*" -DestinationPath "escape_from_the_dungeon-windows.zip" -Force
 
-      - name: Upload Windows exe
+      - name: Upload Windows package
         uses: actions/upload-artifact@v4
         with:
           name: escape_from_the_dungeon-windows
-          path: release/**
+          path: escape_from_the_dungeon-windows.zip
