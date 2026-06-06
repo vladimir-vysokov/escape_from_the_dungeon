@@ -34,7 +34,13 @@ jobs:
           $packageDir = "dist\escape_from_the_dungeon-windows"
           New-Item -ItemType Directory -Force -Path $packageDir | Out-Null
           Copy-Item "release\escape_from_the_dungeon.exe" $packageDir
-          windeployqt "$packageDir\escape_from_the_dungeon.exe" --release --dir $packageDir --compiler-runtime --no-translations
+          & "$env:QT_ROOT_DIR\bin\windeployqt.exe" `
+            "$packageDir\escape_from_the_dungeon.exe" `
+            --release `
+            --dir $packageDir `
+            --plugindir "$env:QT_ROOT_DIR\plugins" `
+            --compiler-runtime `
+            --no-translations
           Compress-Archive -Path "$packageDir\*" -DestinationPath "escape_from_the_dungeon-universal.zip" -Force
 
       - name: Upload Windows package
