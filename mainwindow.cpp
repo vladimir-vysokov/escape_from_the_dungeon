@@ -7,6 +7,7 @@
 #include <QMessageBox>
 #include <QPainter>
 #include <QRandomGenerator>
+#include <QResizeEvent>
 #include <QCoreApplication>
 #include <QFile>
 #include <QFileInfo>
@@ -137,12 +138,20 @@ MainWindow::MainWindow(QWidget *parent)
 {
     setupUi();
     generateMap();
+    updateMapCellSize();
+}
+
+void MainWindow::resizeEvent(QResizeEvent *event)
+{
+    QMainWindow::resizeEvent(event);
+    updateMapCellSize();
 }
 
 void MainWindow::setupUi()
 {
     setWindowTitle("Побег из подземелья");
-    setFixedSize(820, 720);
+    setMinimumSize(820, 720);
+    resize(980, 860);
     setFocusPolicy(Qt::StrongFocus);
 
     QWidget *central = new QWidget(this);
@@ -153,7 +162,7 @@ void MainWindow::setupUi()
     mainLayout->setContentsMargins(24, 20, 24, 20);
     mainLayout->setSpacing(16);
 
-    QFrame *topPanel = new QFrame(central);
+    topPanel = new QFrame(central);
     topPanel->setStyleSheet(
         "QFrame { background-color: #172033; border: 1px solid #334155; border-radius: 8px; }"
         "QLabel { border: none; }");
@@ -172,21 +181,30 @@ void MainWindow::setupUi()
     topLayout->addWidget(statsLabel);
     mainLayout->addWidget(topPanel);
 
-    QWidget *mapWidget = new QWidget(central);
+    mapWidget = new QWidget(central);
+    mapWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     mapLayout = new QGridLayout(mapWidget);
-    mapLayout->setSpacing(2);
+    mapLayout->setSpacing(0);
     mapLayout->setContentsMargins(0, 0, 0, 0);
 
     for (int row = 0; row < Rows; ++row) {
         QVector<QLabel*> line;
         for (int col = 0; col < Cols; ++col) {
             QLabel *cell = new QLabel(mapWidget);
-            cell->setFixedSize(44, 44);
+            cell->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+            cell->setMinimumSize(0, 0);
             cell->setAlignment(Qt::AlignCenter);
             mapLayout->addWidget(cell, row, col);
             line.push_back(cell);
         }
         cells.push_back(line);
+    }
+
+    for (int row = 0; row < Rows; ++row) {
+        mapLayout->setRowStretch(row, 1);
+    }
+    for (int col = 0; col < Cols; ++col) {
+        mapLayout->setColumnStretch(col, 1);
     }
 
     QHBoxLayout *centerLayout = new QHBoxLayout;
@@ -195,7 +213,7 @@ void MainWindow::setupUi()
     centerLayout->addStretch();
     mainLayout->addLayout(centerLayout, 1);
 
-    QFrame *bottomPanel = new QFrame(central);
+    bottomPanel = new QFrame(central);
     bottomPanel->setStyleSheet(
         "QFrame { background-color: #172033; border: 1px solid #334155; border-radius: 8px; }"
         "QPushButton { background-color: #2563eb; color: white; border: none; border-radius: 6px;"
@@ -219,6 +237,38 @@ void MainWindow::setupUi()
         generateMap();
         setFocus();
     });
+
+}
+
+void MainWindow::updateMapCellSize()
+{
+    if (!mapWidget || cells.isEmpty() || cells.first().isEmpty() || map.size() != Rows) {
+        return;
+    }
+
+    QWidget *central = centralWidget();
+    if (!central) {
+        return;
+    }
+
+    const QMargins margins = (central && central->layout()) ? central->layout()->contentsMargins() : QMargins();
+    const int availableWidth = central->width() - margins.left() - margins.right();
+    const int availableHeight = central->height()
+                                - margins.top() - margins.bottom()
+                                - (topPanel ? topPanel->height() : 0)
+                                - (bottomPanel ? bottomPanel->height() : 0)
+                                - 32;
+
+    const int cellSize = qMax(28, qMin(availableWidth / Cols, availableHeight / Rows));
+
+    for (int row = 0; row < Rows; ++row) {
+        for (int col = 0; col < Cols; ++col) {
+            cells[row][col]->setFixedSize(cellSize, cellSize);
+        }
+    }
+
+    mapWidget->setFixedSize(cellSize * Cols, cellSize * Rows);
+    drawMap();
 }
 
 void MainWindow::generateMap()
@@ -355,6 +405,9 @@ int MainWindow::countReachableCoins(const QVector<QVector<bool>> &visited)
 
 void MainWindow::drawMap()
 {
+    const int cellSize = cells.isEmpty() || cells.first().isEmpty() ? 28 : cells[0][0]->width();
+    const int iconSize = qMax(16, cellSize - 12);
+
     for (int row = 0; row < Rows; ++row) {
         for (int col = 0; col < Cols; ++col) {
             QChar cell = map[row][col];
@@ -365,25 +418,25 @@ void MainWindow::drawMap()
                 color = "#020617";
             } else if (cell == QChar('P')) {
                 color = "#38bdf8";
-                icon = loadSvgIcon("player.svg", QSize(30, 30));
+                icon = loadSvgIcon("player.svg", QSize(iconSize, iconSize));
             } else if (cell == QChar('C')) {
                 color = "#f59e0b";
-                icon = loadSvgIcon("coin.svg", QSize(30, 30));
+                icon = loadSvgIcon("coin.svg", QSize(iconSize, iconSize));
             } else if (cell == QChar('K')) {
                 color = "#7c5e10";
-                icon = loadSvgIcon("key.svg", QSize(30, 30), true, true);
+                icon = loadSvgIcon("key.svg", QSize(iconSize, iconSize), true, true);
             } else if (cell == QChar('E')) {
                 color = "#166534";
-                icon = loadSvgIcon("door.svg", QSize(30, 30));
+                icon = loadSvgIcon("door.svg", QSize(iconSize, iconSize));
             } else if (cell == QChar('T')) {
                 color = "#7f1d1d";
-                icon = loadSvgIcon("alert.svg", QSize(30, 30));
+                icon = loadSvgIcon("alert.svg", QSize(iconSize, iconSize));
             } else if (cell == QChar('H')) {
                 color = "#9f1239";
-                icon = loadSvgIcon("medicine.svg", QSize(30, 30));
+                icon = loadSvgIcon("medicine.svg", QSize(iconSize, iconSize));
             } else if (cell == QChar('M')) {
                 color = "#581c87";
-                icon = loadSvgIcon("monster.svg", QSize(30, 30));
+                icon = loadSvgIcon("monster.svg", QSize(iconSize, iconSize));
             } else {
                 color = "#334155";
             }

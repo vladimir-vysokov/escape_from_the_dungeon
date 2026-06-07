@@ -9,7 +9,9 @@
 #include <vector>
 
 class QGridLayout;
+class QFrame;
 class QKeyEvent;
+class QWidget;
 
 class MainWindow : public QMainWindow
 {
@@ -18,9 +20,11 @@ public:
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
 
 private:
     void setupUi();
+    void updateMapCellSize();
     void generateMap();
     void placeRandomObjects();
     bool isSafeZone(int row, int col);
@@ -37,6 +41,9 @@ private:
     static const int Rows = 12, Cols = 12, NeedCoins = 4;
 
     QLabel *titleLabel = nullptr, *statsLabel = nullptr;
+    QFrame *topPanel = nullptr;
+    QWidget *mapWidget = nullptr;
+    QFrame *bottomPanel = nullptr;
     QGridLayout *mapLayout = nullptr;
     QVector<QVector<QLabel*>> cells;
 
