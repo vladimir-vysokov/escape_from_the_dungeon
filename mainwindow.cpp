@@ -159,23 +159,23 @@ void MainWindow::setupUi()
     setCentralWidget(central);
 
     QVBoxLayout *mainLayout = new QVBoxLayout(central);
-    mainLayout->setContentsMargins(24, 20, 24, 20);
-    mainLayout->setSpacing(16);
+    mainLayout->setContentsMargins(12, 12, 12, 12);
+    mainLayout->setSpacing(8);
 
     topPanel = new QFrame(central);
     topPanel->setStyleSheet(
         "QFrame { background-color: #172033; border: 1px solid #334155; border-radius: 8px; }"
         "QLabel { border: none; }");
     QVBoxLayout *topLayout = new QVBoxLayout(topPanel);
-    topLayout->setContentsMargins(18, 10, 18, 10);
+    topLayout->setContentsMargins(12, 8, 12, 8);
 
     titleLabel = new QLabel("Побег из подземелья", topPanel);
     titleLabel->setAlignment(Qt::AlignCenter);
-    titleLabel->setStyleSheet("font-size: 26px; font-weight: bold; color: #fbbf24;");
+    titleLabel->setStyleSheet("font-size: 22px; font-weight: bold; color: #fbbf24;");
 
     statsLabel = new QLabel(topPanel);
     statsLabel->setAlignment(Qt::AlignCenter);
-    statsLabel->setStyleSheet("font-size: 17px; color: #e5e7eb;");
+    statsLabel->setStyleSheet("font-size: 14px; color: #e5e7eb;");
 
     topLayout->addWidget(titleLabel);
     topLayout->addWidget(statsLabel);
@@ -217,15 +217,15 @@ void MainWindow::setupUi()
     bottomPanel->setStyleSheet(
         "QFrame { background-color: #172033; border: 1px solid #334155; border-radius: 8px; }"
         "QPushButton { background-color: #2563eb; color: white; border: none; border-radius: 6px;"
-        " padding: 10px 18px; font-size: 15px; font-weight: bold; }"
+        " padding: 8px 16px; font-size: 14px; font-weight: bold; }"
         "QPushButton:hover { background-color: #3b82f6; }"
         "QPushButton:pressed { background-color: #1d4ed8; }");
     QHBoxLayout *bottomLayout = new QHBoxLayout(bottomPanel);
-    bottomLayout->setContentsMargins(16, 12, 16, 12);
-    bottomLayout->setSpacing(12);
+    bottomLayout->setContentsMargins(12, 8, 12, 8);
+    bottomLayout->setSpacing(8);
 
     newGameButton = new QPushButton("Новая игра", bottomPanel);
-    newGameButton->setMinimumWidth(160);
+    newGameButton->setMinimumWidth(140);
 
     bottomLayout->addStretch();
     bottomLayout->addWidget(newGameButton);
@@ -257,7 +257,7 @@ void MainWindow::updateMapCellSize()
                                 - margins.top() - margins.bottom()
                                 - (topPanel ? topPanel->height() : 0)
                                 - (bottomPanel ? bottomPanel->height() : 0)
-                                - 32;
+                                - 16;
 
     const int cellSize = qMax(28, qMin(availableWidth / Cols, availableHeight / Rows));
 
